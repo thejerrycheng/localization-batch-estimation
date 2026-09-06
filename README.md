@@ -13,8 +13,33 @@ everything runs from a clean checkout in about two minutes.
 
 ```bash
 pip install numpy matplotlib
-python scripts/tools/run_localization.py --seeds 4
+python scripts/tools/run_se3.py --seeds 3            # Assignment 3, on SE(3)
+python scripts/tools/run_localization.py --seeds 4   # Assignment 2, planar
 ```
+
+## Assignment 3: SE(3), stereo + IMU (3 seeds, 160 steps)
+
+| window | translation RMS [m] | rotation RMS [mrad] | time for 160 steps [s] |
+| --- | --- | --- | --- |
+| 1 (a filter) | 0.152 | 24.5 | 0.3 |
+| 2 | 0.183 | 28.8 | 0.5 |
+| 5 | 0.209 | 34.0 | 1.1 |
+| 10 | 0.186 | 33.3 | 2.6 |
+| 20 | 0.140 | 30.6 | 4.5 |
+| **batch** | **0.070** | **10.9** | **0.5** |
+
+Batch is **2.2× more accurate in both translation and rotation** than the best
+sliding window, and **9× cheaper** than a 20-step one. The window results are not
+monotonic in the window size — at three seeds the spread between 2, 5 and 10 is
+linearisation noise, not a trend — but all of them sit two to three times worse
+than batch.
+
+The gap is far wider than in the planar case (18 %) because of the observation
+model: a stereo camera sees a landmark only within range and inside the field of
+view, so at any instant there are typically three or four measurements against
+six degrees of freedom. A filter must commit to a pose on that. Batch need not —
+a landmark first seen at step 90 constrains the pose at step 40, because both are
+unknowns in the same linear system.
 
 ## Results (4 seeds, 300 steps)
 
